@@ -1,4 +1,3 @@
-
 name: Build SOSAuto
 on: [push]
 jobs:
@@ -14,10 +13,7 @@ jobs:
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
-      - run: cp lib/main.dart /tmp/main.dart.bak
-      - run: flutter create . --platforms=android --project-name sosauto3
-      - run: mv /tmp/main.dart.bak lib/main.dart
-      - run: flutter pub add url_launcher local_auth
+      - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
