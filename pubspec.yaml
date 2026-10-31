@@ -1,4 +1,3 @@
-
 name: Build SOSAuto
 on: [push]
 jobs:
