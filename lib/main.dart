@@ -1,21 +1,41 @@
-name: sosauto3
-description: S.O.S. Auto #33 - Sincelejo
-publish_to: 'none'
-version: 1.0.0+37
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-environment:
-  sdk: '^3.4.0'
+void main() {
+  runApp(const MyApp());
+}
 
-dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.8
-  webview_flutter: ^4.8.0
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MyWebView(),
+    );
+  }
+}
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^3.0.0
+class MyWebView extends StatefulWidget {
+  const MyWebView({super.key});
+  @override
+  State<MyWebView> createState() => _MyWebViewState();
+}
 
-flutter:
-  uses-material-design: true
+class _MyWebViewState extends State<MyWebView> {
+  late final WebViewController controller;
+  @override
+  void initState() {
+    super.initState();
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse('https://flutter.dev'));
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('SOSAuto3')),
+      body: WebViewWidget(controller: controller),
+    );
+  }
+}
