@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() => runApp(const SOSAutoApp());
@@ -114,13 +115,15 @@ class _FullScreenState extends State<FullScreen> {
   }
 
   void _showPaute(){
-    showModalBottomSheet(context: context, builder: (_)=> Container(padding: const EdgeInsets.all(20), height: 380, child: Column(children: [
-      const Text('Pagar Pauta - Wompi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+    showModalBottomSheet(context: context, builder: (_)=> Container(padding: const EdgeInsets.all(20), height: 420, child: Column(children: [
+      const Text('Pagar Pauta - QR Wompi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       const SizedBox(height: 10),
-      Container(width: 170, height: 170, color: Colors.grey.shade300, child: const Center(child: Text('QR Wompi\ncheckout.wompi.co/l/71663024', textAlign: TextAlign.center))),
+      QrImageView(data: 'https://checkout.wompi.co/l/71663024', size: 180),
       const SizedBox(height: 10),
       Text('Vehiculo: ' + (placa.isEmpty ? 'Registra primero' : placa), style: const TextStyle(fontSize: 11)),
-      const Text('Formato: 1080x1080 JPG + 30 palabras + WhatsApp 3116479280 - BASE mas Wompi 2.9pct mas 900 mas IVA lo paga pautante', style: TextStyle(fontSize: 10), textAlign: TextAlign.center),
+      const Text('Formato: 1080x1080 JPG + 30 palabras + WhatsApp 3116479280\nBASE + Wompi 2.9% + 900 + IVA lo paga pautante', style: TextStyle(fontSize: 10), textAlign: TextAlign.center),
+      const SizedBox(height: 6),
+      const Text('Link: checkout.wompi.co/l/71663024', style: TextStyle(fontSize: 9, color: Colors.blue)),
     ])));
   }
 
