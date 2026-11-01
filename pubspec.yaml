@@ -1,7 +1,7 @@
 name: sosauto3
-description: S.O.S.Auto - Applay65 Desde Sincelejo para toda America - Build 55 QR Limpio
+description: S.O.S.Auto Applay65 - Build 61 Estable con Ficha Vehicular
 publish_to: 'none'
-version: 1.0.0+55
+version: 1.0.0+61
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -9,14 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
-  webview_flutter: ^4.4.2
-  qr_flutter: ^4.1.0
+  cupertino_icons: ^1.0.8
+  qr_flutter: ^4.0.0
+  url_launcher: ^6.1.14
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^2.0.3
 
 flutter:
   uses-material-design: true
