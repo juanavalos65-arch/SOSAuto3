@@ -1,4 +1,4 @@
-name: Build AAB #36 Play Store
+name: Build AAB #36 Play Store Final
 on: [push]
 jobs:
   build:
