@@ -1,45 +1,20 @@
-name: Build APK
+name: Build AAB Final
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Java
-        uses: actions/setup-java@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: 'zulu'
           java-version: '17'
-
-      - name: Setup Flutter Latest
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
-          cache: true
-
-      - name: Fix old Gradle
-        run: |
-          cp lib/main.dart /tmp/main.dart || true
-          cp pubspec.yaml /tmp/pubspec.yaml || true
-          cp -r assets /tmp/assets || true
-          rm -rf android
-          flutter create -t app --platforms=android --project-name sosauto3 --org com.sosauto.app .
-          cp /tmp/main.dart lib/main.dart
-          cp /tmp/pubspec.yaml pubspec.yaml || true
-          mkdir -p assets
-          cp -r /tmp/assets/* assets/ || true
-          flutter --version
-
-      - name: Get packages
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+          flutter-version: '3.22.0'
+      - run: flutter pub get
+      - run: flutter build appbundle --release
+      - uses: actions/upload-artifact@v4
         with:
-          name: sosauto-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: app-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
