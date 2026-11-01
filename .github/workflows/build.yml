@@ -13,25 +13,24 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Flutter
+      - name: Setup Flutter Latest
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
           channel: 'stable'
           cache: true
 
-      - name: Fix Gradle project
+      - name: Fix old Gradle
         run: |
-          echo "Salvando archivos..."
           cp lib/main.dart /tmp/main.dart || true
           cp pubspec.yaml /tmp/pubspec.yaml || true
           cp -r assets /tmp/assets || true
           rm -rf android
           flutter create -t app --platforms=android --project-name sosauto3 --org com.sosauto.app .
-          echo "Restaurando archivos..."
           cp /tmp/main.dart lib/main.dart
-          cp /tmp/pubspec.yaml pubspec.yaml
-          cp -r /tmp/assets assets || true
+          cp /tmp/pubspec.yaml pubspec.yaml || true
+          mkdir -p assets
+          cp -r /tmp/assets/* assets/ || true
+          flutter --version
 
       - name: Get packages
         run: flutter pub get
