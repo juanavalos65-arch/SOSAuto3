@@ -24,18 +24,39 @@ class MyWebView extends StatefulWidget {
 
 class _MyWebViewState extends State<MyWebView> {
   late final WebViewController controller;
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse('https://flutter.dev'));
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) {
+            setState(() => isLoading = false);
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse('https://applay65.com'));
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SOSAuto3')),
-      body: WebViewWidget(controller: controller),
+      appBar: AppBar(
+        title: const Text('Applay65'),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: controller),
+          if (isLoading)
+            const Center(child: CircularProgressIndicator()),
+        ],
+      ),
     );
   }
 }
