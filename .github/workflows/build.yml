@@ -1,4 +1,4 @@
-name: Build AAB Final
+name: build
 on: [push]
 jobs:
   build:
@@ -12,7 +12,10 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-      - run: flutter pub get
+      - name: Fix old Gradle project
+        run: |
+          flutter create . --platforms=android --project-name sosauto3 --org com.sosauto3.app
+          flutter pub get
       - run: flutter build appbundle --release
       - uses: actions/upload-artifact@v4
         with:
