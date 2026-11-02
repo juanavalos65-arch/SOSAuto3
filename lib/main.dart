@@ -1,162 +1,354 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
-void main() => runApp(const SOSAutoApp());
-
-class SOSAutoApp extends StatelessWidget {
-  const SOSAutoApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false, home: FullScreen());
-  }
+void main() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: SosAutoFinal(),
+  ));
 }
 
-class FullScreen extends StatefulWidget {
-  const FullScreen({super.key});
+class SosAutoFinal extends StatefulWidget {
+  const SosAutoFinal({super.key});
   @override
-  State<FullScreen> createState() => _FullScreenState();
+  State<SosAutoFinal> createState() => _SosAutoFinalState();
 }
 
-class _FullScreenState extends State<FullScreen> {
-  String marca = '', modelo = '', color = '', placa = '';
-  List<Map<String,String>> conductores = [
-    {'nombres':'','apellidos':'','telefono':'','rol':'Propietario'}
+class _SosAutoFinalState extends State<SosAutoFinal> with SingleTickerProviderStateMixin {
+  String placa = '';
+  List<Map<String, dynamic>> novedades = [];
+  List<Map<String, dynamic>> pautas = [
+    {'nombre': 'Gruas Sincelejo', 'ciudad': 'Sincelejo', 'horario': '24/7', 'telefono': '3116479280'},
+    {'nombre': 'Taller El Costeño', 'ciudad': 'Sincelejo', 'horario': '7am-6pm', 'telefono': '3116479280'},
   ];
+  List<Map<String, dynamic>> bannerItems = [];
   bool showFicha = false;
-  List<Map<String,String>> novedades = [
-    {'tipo':'Reten','desc':'Reten via Corozal km 5','hora':'hace 10 min'},
-    {'tipo':'Hueco','desc':'Hueco Av. Sincelejito','hora':'hace 1h'},
-  ];
 
-  final marcaCtrl = TextEditingController();
-  final modeloCtrl = TextEditingController();
-  final colorCtrl = TextEditingController();
-  final placaCtrl = TextEditingController();
+  late AnimationController _blinkController;
+  late Animation<double> _blinkAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _blinkController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _blinkAnim = Tween<double>(begin: 1.0, end: 0.4).animate(_blinkController);
+    _actualizarBanner();
+  }
+
+  void _actualizarBanner() {
+    bannerItems = [];
+    if (novedades.isNotEmpty) {
+      bannerItems.add({
+        'tipo': 'mixto',
+        'novedadTipo': novedades.first['tipo'],
+        'novedadPlaca': novedades.first['placa'],
+        'pautaNombre': pautas.first['nombre'],
+        'pautaHorario': pautas.first['horario']
+      });
+    } else {
+      bannerItems.add({
+        'tipo': 'solo_pauta',
+        'pautaNombre': pautas.first['nombre'],
+        'pautaHorario': pautas.first['horario']
+      });
+    }
+  }
+
+  void _nuevaNovedad(String tipo) {
+    if (placa.isEmpty) {
+      setState(() => showFicha = true);
+      return;
+    }
+    setState(() {
+      novedades.insert(0, {'tipo': tipo, 'placa': placa, 'dist': '1.2km', 'hora': 'ahora'});
+      _actualizarBanner();
+    });
+    _blinkController.repeat(reverse: true);
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted) _blinkController.stop();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('$tipo $placa enviado a usuarios a 5km'),
+      backgroundColor: tipo == 'Estoy en Peligro' ? Colors.purple : Colors.green,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _blinkController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              color: const Color(0xFFE8E6E1),
-              child: Center(
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.map, size: 70, color: Colors.grey),
-                  const Text('MAPA SOSAuto - Sincelejo', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(placa.isEmpty ? 'Sin vehiculo registrado' : placa, style: const TextStyle(fontSize: 12)),
-                  const SizedBox(height: 12),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    ElevatedButton(onPressed: () => _open('https://www.google.com/maps/@9.3047,-75.3978,14z'), child: const Text('Google Maps')),
-                    const SizedBox(width: 8),
-                    ElevatedButton(onPressed: () => _open('https://waze.com/ul?ll=9.3047,-75.3978&navigate=yes'), child: const Text('Waze')),
-                  ])
-                ]),
+      backgroundColor: const Color(0xFFF0F5FF),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              color: Colors.white,
+              child: Row(
+                children: [
+                  Image.asset('assets/logo_sosauto.png', height: 28,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.directions_car, color: Colors.orange, size: 32)),
+                  const SizedBox(width: 8),
+                  const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('S.O.S. Auto',
+                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF0A2A6B), letterSpacing: 0.5)),
+                    Text('con auxilio al instante', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                  ]),
+                ],
               ),
             ),
-          ),
-          Positioned(top: 40, left: 8, right: 8, child: Column(children: [
-            Row(children: [ _topBtn('Me Vare', Icons.car_repair, Colors.orange), const SizedBox(width: 5), _topBtn('Accidente', Icons.car_crash, Colors.red)]),
-            const SizedBox(height: 5),
-            Row(children: [ _topBtn('Peligro', Icons.sos, Colors.purple), const SizedBox(width: 5), _topBtn('Robo Auto', Icons.local_police, Colors.black, isRobo: true)]),
-            const SizedBox(height: 8),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              _smallBtn(placa.isEmpty ? 'Mi Auto' : placa, Icons.directions_car, () => setState(() => showFicha = true)),
-              _smallBtn('Novedades', Icons.traffic, () => _showNovedades(), alert: true),
-              _smallBtn('Paute Aqui', Icons.campaign, () => _showPaute(), primary: true),
-            ]),
-          ])),
-          Positioned(bottom: 0, left: 0, right: 0, child: Container(height: 85, color: Colors.white.withOpacity(0.95), child: Column(children: [Container(color: Colors.red, width: double.infinity, padding: const EdgeInsets.all(3), child: const Text('PAUTAS ACTIVAS - APPLAY65', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))), Expanded(child: ListView(scrollDirection: Axis.horizontal, children: const [Chip(label: Text('Gruas Sincelejo 24H')), Chip(label: Text('Taller El Costeno -20pct'))]))]))),
-          if (showFicha) _fichaModal(),
-        ],
+            Container(
+              color: const Color(0xFFF0F5FF),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              child: Row(children: [
+                _topMini('Me Varé', Icons.build_outlined, () => _nuevaNovedad('Me Varé')),
+                const SizedBox(width: 5),
+                _topMini('Accidente', Icons.warning_amber_outlined, () => _nuevaNovedad('Accidente')),
+                const SizedBox(width: 5),
+                _topMini('Estoy en Peligro', Icons.shield_outlined, () => _nuevaNovedad('Estoy en Peligro'), danger: true),
+                const SizedBox(width: 5),
+                _topMini('Robo Auto', Icons.lock_outline, () => _nuevaNovedad('Robo Auto'), black: true),
+              ]),
+            ),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8ECF2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white),
+                ),
+                child: Stack(
+                  children: [
+                    const Center(child: Text('MAPA INTERACTIVO', style: TextStyle(color: Colors.black12, fontSize: 12))),
+                    ...List.generate(8, (i) => Positioned(
+                          left: 30 + (i * 37) % 200,
+                          top: 20 + (i * 52) % 220,
+                          child: const Icon(Icons.location_on, color: Color(0xFF1565C0), size: 28),
+                        )),
+                    const Center(child: Icon(Icons.my_location, color: Color(0xFF1565C0), size: 36)),
+                  ],
+                ),
+              ),
+            ),
+            _bannerUnico(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              color: Colors.white,
+              child: Row(children: [
+                Expanded(child: _bottomBtn('Registro', Icons.person_outline, () => setState(() => showFicha = true))),
+                const SizedBox(width: 6),
+                Expanded(child: _bottomNovedades()),
+                const SizedBox(width: 6),
+                Expanded(child: _bottomBtn('Paute Aquí', Icons.campaign_outlined, () => _showPaute())),
+              ]),
+            ),
+            if (showFicha) _fichaRegistro(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _topBtn(String label, IconData icon, Color c, {bool isRobo = false}) {
-    return Expanded(child: ElevatedButton.icon(onPressed: (){
-      if(isRobo && placa.isEmpty){
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registra vehiculo y conductores primero'), backgroundColor: Colors.red));
-        setState(()=> showFicha = true); return;
-      }
-      if(isRobo){ _confirmRobo(); } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(label + ' enviado - Placa ' + placa)));
-      }
-    }, icon: Icon(icon, size: 15), label: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)), style: ElevatedButton.styleFrom(backgroundColor: c, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 9))));
-  }
-
-  Widget _smallBtn(String label, IconData icon, VoidCallback onTap, {bool primary = false, bool alert = false}) {
-    return ElevatedButton.icon(onPressed: onTap, icon: Icon(icon, size: 12), label: Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)), style: ElevatedButton.styleFrom(backgroundColor: primary ? Colors.red : alert ? Colors.amber.shade700 : Colors.white, foregroundColor: primary || alert ? Colors.white : Colors.black, padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))));
-  }
-
-  void _open(String url) async { final u = Uri.parse(url); if(await canLaunchUrl(u)) launchUrl(u, mode: LaunchMode.externalApplication); }
-
-  void _showNovedades(){
-    showModalBottomSheet(context: context, isScrollControlled: true, builder: (_)=> Container(height: 450, padding: const EdgeInsets.all(12), child: Column(children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Novedades en la Via', style: TextStyle(fontWeight: FontWeight.bold)), ElevatedButton(onPressed: (){ Navigator.pop(context); _addNovedad(); }, child: const Text('Reportar'))]),
-      Expanded(child: ListView.builder(itemCount: novedades.length, itemBuilder: (_, i)=> Card(child: ListTile(title: Text(novedades[i]['tipo'].toString() + ' - ' + novedades[i]['desc'].toString(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)), subtitle: Text(novedades[i]['hora'].toString()))))),
-    ])));
-  }
-
-  void _addNovedad(){
-    final c = TextEditingController();
-    showDialog(context: context, builder: (_)=> AlertDialog(title: const Text('Reportar Novedad'), content: TextField(controller: c, decoration: const InputDecoration(labelText: 'Que pasa y donde')), actions: [TextButton(onPressed: ()=> Navigator.pop(context), child: const Text('Cancelar')), ElevatedButton(onPressed: (){ setState(()=> novedades.insert(0, {'tipo':'Nuevo','desc':c.text,'hora':'ahora'})); Navigator.pop(context); }, child: const Text('Publicar'))]));
-  }
-
-  void _confirmRobo(){
-    showDialog(context: context, builder: (_)=> AlertDialog(
-      title: Text('ROBO ' + placa + ' - Verificacion', style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold)),
-      content: Text('Vehiculo: ' + marca + ' ' + modelo + ' ' + color + ' ' + placa),
-      actions: [TextButton(onPressed: ()=> Navigator.pop(context), child: const Text('Cancelar')), ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.red), onPressed: (){ Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reporte en verificacion - Envia foto denuncia al 3116479280'), backgroundColor: Colors.red)); }, child: const Text('Confirmar', style: TextStyle(color: Colors.white)))],
-    ));
-  }
-
-  void _showPaute(){
-    showModalBottomSheet(context: context, builder: (_)=> Container(padding: const EdgeInsets.all(20), height: 420, child: Column(children: [
-      const Text('Pagar Pauta - QR Wompi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      const SizedBox(height: 10),
-      QrImageView(data: 'https://checkout.wompi.co/l/71663024', size: 180),
-      const SizedBox(height: 10),
-      Text('Vehiculo: ' + (placa.isEmpty ? 'Registra primero' : placa), style: const TextStyle(fontSize: 11)),
-      const Text('Formato: 1080x1080 JPG + 30 palabras + WhatsApp 3116479280\nBASE + Wompi 2.9% + 900 + IVA lo paga pautante', style: TextStyle(fontSize: 10), textAlign: TextAlign.center),
-      const SizedBox(height: 6),
-      const Text('Link: checkout.wompi.co/l/71663024', style: TextStyle(fontSize: 9, color: Colors.blue)),
-    ])));
-  }
-
-  Widget _fichaModal(){
-    return Positioned.fill(child: Container(color: Colors.black54, child: Center(child: Container(margin: const EdgeInsets.all(10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)), child: SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Ficha Vehiculo + Conductores', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)), IconButton(icon: const Icon(Icons.close), onPressed: ()=> setState(()=> showFicha = false))]),
-      const Text('Datos del auto y quienes lo manejan - Obligatorio anti-falsos', style: TextStyle(fontSize: 10, color: Colors.red)),
-      const SizedBox(height: 6),
-      TextField(controller: marcaCtrl, decoration: const InputDecoration(labelText: 'Marca', border: OutlineInputBorder(), isDense: true)),
-      const SizedBox(height: 4),
-      Row(children: [Expanded(child: TextField(controller: modeloCtrl, decoration: const InputDecoration(labelText: 'Modelo', border: OutlineInputBorder(), isDense: true))), const SizedBox(width: 4), Expanded(child: TextField(controller: colorCtrl, decoration: const InputDecoration(labelText: 'Color', border: OutlineInputBorder(), isDense: true)))]),
-      const SizedBox(height: 4),
-      TextField(controller: placaCtrl, decoration: const InputDecoration(labelText: 'Placa', border: OutlineInputBorder(), isDense: true)),
-      const Divider(),
-      Text('Conductores: Nombres, Apellidos, Telefono (' + conductores.length.toString() + ')', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-      const SizedBox(height: 4),
-      ...List.generate(conductores.length, (i){
-        return Container(margin: const EdgeInsets.only(bottom: 5), padding: const EdgeInsets.all(5), decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(5)), child: Column(children: [
-          Row(children: [
-            Expanded(child: TextFormField(initialValue: conductores[i]['nombres'], onChanged: (v)=> conductores[i]['nombres']=v, decoration: const InputDecoration(labelText: 'Nombres', isDense: true, border: OutlineInputBorder()))),
+  Widget _topMini(String label, IconData icon, VoidCallback onTap, {bool danger = false, bool black = false}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFD0D8E8)),
+          ),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(icon, size: 14, color: danger ? Colors.orange : black ? Colors.black : const Color(0xFF0A2A6B)),
             const SizedBox(width: 3),
-            Expanded(child: TextFormField(initialValue: conductores[i]['apellidos'], onChanged: (v)=> conductores[i]['apellidos']=v, decoration: const InputDecoration(labelText: 'Apellidos', isDense: true, border: OutlineInputBorder()))),
+            Flexible(child: Text(label, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF0A2A6B)))),
           ]),
-          const SizedBox(height: 3),
-          TextFormField(initialValue: conductores[i]['telefono'], onChanged: (v)=> conductores[i]['telefono']=v, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Celular', prefixText: '+57 ', isDense: true, border: OutlineInputBorder())),
-        ]));
-      }),
-      TextButton.icon(onPressed: ()=> setState(()=> conductores.add({'nombres':'','apellidos':'','telefono':'','rol':'Familiar'})), icon: const Icon(Icons.person_add, size: 14), label: const Text('Agregar conductor', style: TextStyle(fontSize: 10))),
-      SizedBox(width: double.infinity, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.red), onPressed: (){
-        if(placaCtrl.text.length < 5){ ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Placa minimo 5'))); return; }
-        if(conductores.any((e)=> e['nombres']!.isEmpty || e['apellidos']!.isEmpty || e['telefono']!.length < 7)){ ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completa nombres, apellidos y telefono'))); return; }
-        setState((){ marca=marcaCtrl.text; modelo=modeloCtrl.text; color=colorCtrl.text; placa=placaCtrl.text.toUpperCase(); showFicha=false; });
-      }, child: const Text('Guardar Ficha', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))),
-    ]))))));
+        ),
+      ),
+    );
+  }
+
+  Widget _bannerUnico() {
+    if (bannerItems.isEmpty) return const SizedBox();
+    final item = bannerItems.first;
+    bool hayNovedad = item['tipo'] == 'mixto';
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 62,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)]),
+      child: Row(children: [
+        if (hayNovedad)
+          Expanded(
+            flex: 5,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: const BoxDecoration(color: Color(0xFFE53935), borderRadius: BorderRadius.only(topLeft: Radius.circular(10), bottomLeft: Radius.circular(10))),
+              child: Row(children: [
+                const Icon(Icons.build, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Text(item['novedadTipo'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text('${item['novedadPlaca']} • 1.2km', style: const TextStyle(color: Colors.white, fontSize: 11)),
+                ])
+              ]),
+            ),
+          ),
+        Expanded(
+          flex: hayNovedad ? 6 : 10,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+                color: const Color(0xFF1565C0),
+                borderRadius: hayNovedad
+                    ? const BorderRadius.only(topRight: Radius.circular(10), bottomRight: Radius.circular(10))
+                    : BorderRadius.circular(10)),
+            child: Row(children: [
+              const Icon(Icons.local_shipping, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text(item['pautaNombre'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('${item['pautaHorario']} • Cerca de ti', style: const TextStyle(color: Colors.white, fontSize: 11)),
+              ])
+            ]),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _bottomBtn(String label, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFD0D8E8))),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, size: 20, color: Colors.black54), const SizedBox(height: 2), Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold))]),
+      ),
+    );
+  }
+
+  Widget _bottomNovedades() {
+    bool hay = novedades.isNotEmpty;
+    return AnimatedBuilder(
+      animation: _blinkAnim,
+      builder: (_, __) {
+        return Opacity(
+          opacity: hay ? _blinkAnim.value : 1.0,
+          child: GestureDetector(
+            onTap: () {
+              _blinkController.stop();
+              _showNovedades();
+            },
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                  color: hay ? Colors.orange.shade400 : const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: hay ? Colors.orange : const Color(0xFFD0D8E8), width: hay ? 2 : 1),
+                  boxShadow: hay ? [BoxShadow(color: Colors.orange.withOpacity(0.4), blurRadius: 8)] : []),
+              child: Stack(
+                children: [
+                  Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.notifications_active, size: 20, color: hay ? Colors.white : Colors.orange), const SizedBox(height: 2), Text('Novedades', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: hay ? Colors.white : Colors.black))])),
+                  if (hay)
+                    Positioned(
+                        top: 0,
+                        right: 4,
+                        child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                            child: Text('${novedades.length}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))))
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _fichaRegistro() {
+    return Stack(children: [
+      Positioned.fill(
+        child: Container(
+          color: Colors.black54,
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Text('Registro Vehículo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 10),
+                TextField(onChanged: (v) => placa = v.toUpperCase(), decoration: const InputDecoration(labelText: 'Placa Ej: ABC123', border: OutlineInputBorder())),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(child: ElevatedButton(onPressed: () => setState(() => showFicha = false), child: const Text('Cancelar'))),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: ElevatedButton(
+                          onPressed: () {
+                            setState(() => showFicha = false);
+                            _actualizarBanner();
+                          },
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0A2A6B)),
+                          child: const Text('Guardar', style: TextStyle(color: Colors.white)))),
+                ])
+              ]),
+            ),
+          ),
+        ),
+      )
+    ]);
+  }
+
+  void _showNovedades() {
+    showModalBottomSheet(
+        context: context,
+        builder: (_) => Container(
+            height: 350,
+            padding: const EdgeInsets.all(12),
+            child: Column(children: [
+              const Text('Novedades en la vía - Alertas colaborativas', style: TextStyle(fontWeight: FontWeight.bold)),
+              Expanded(
+                  child: ListView.builder(
+                      itemCount: novedades.length,
+                      itemBuilder: (_, i) => Card(
+                          child: ListTile(
+                              title: Text(novedades[i]['tipo']),
+                              subtitle: Text('${novedades[i]['placa']} • ${novedades[i]['dist']}'),
+                              trailing: ElevatedButton(onPressed: () {}, child: const Text('Ayudar'))))))
+            ])));
+  }
+
+  void _showPaute() {
+    showModalBottomSheet(
+        context: context,
+        builder: (_) => Container(
+            height: 380,
+            padding: const EdgeInsets.all(16),
+            child: Column(children: [
+              const Text('Paute Aquí - QR Wompi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 10),
+              QrImageView(data: 'https://checkout.wompi.co/l/71663024', size: 160),
+              const SizedBox(height: 10),
+              const Text('Tu empresa aparece en mapa solo pagando pauta geolocalizada', textAlign: TextAlign.center, style: TextStyle(fontSize: 11)),
+              const SizedBox(height: 10),
+              ElevatedButton(onPressed: () => _open('https://checkout.wompi.co/l/71663024'), child: const Text('Pagar Pauta Ahora')),
+            ])));
+  }
+
+  void _open(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
