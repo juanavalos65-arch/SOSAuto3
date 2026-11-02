@@ -23,19 +23,24 @@ jobs:
           
       - name: Regenerate Android and FIX Kotlin Version
         run: |
-          flutter create . --platforms=android
-          # FIX 1: Actualizar Kotlin en build.gradle
-          sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.22'/" android/build.gradle
-          # FIX 2: Si existe en settings.gradle también
-          if grep -q "kotlin" android/settings.gradle; then
-            sed -i "s/id \"org.jetbrains.kotlin.android\" version \".*\"/id \"org.jetbrains.kotlin.android\" version \"1.9.22\"/" android/settings.gradle || true
+          echo "--- Antes ---"
+          cat pubspec.yaml || cat SOSAuto3/pubspec.yaml || echo "no pubspec"
+          # FIX 1: Forzar nombre minúscula en CUALQUIER pubspec.yaml que exista
+          sed -i "s/^name: SOSAuto3/name: sosauto3/I" pubspec.yaml || true
+          sed -i "s/^name: SOSAuto3/name: sosauto3/I" SOSAuto3/pubspec.yaml || true
+          # Si el archivo está dentro de carpeta SOSAuto3, muévelo a raíz
+          if [ -f "SOSAuto3/pubspec.yaml" ]; then
+            cp -r SOSAuto3/* . || true
+            cp SOSAuto3/.github/workflows/build.yml .github/workflows/build.yml || true
+            rm -rf SOSAuto3
           fi
-          # Permisos
+          echo "--- Después ---"
+          cat pubspec.yaml
+          flutter create . --platforms=android --project-name sosauto3 --org com.sosauto.app
+          sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.22'/" android/build.gradle || true
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           sed -i '/<application/i \
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />' $MANIFEST
-          echo "--- build.gradle ---"
-          cat android/build.gradle
           
       - name: Build AAB
         run: flutter build appbundle --release
