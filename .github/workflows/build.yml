@@ -17,9 +17,18 @@ jobs:
           flutter-version: '3.22.0'
           channel: 'stable'
           cache: true
-      - run: flutter pub get
-      - run: flutter build appbundle --release --no-pub
-      - uses: actions/upload-artifact@v4
+          
+      - name: Fix old Gradle project
+        run: |
+          rm -rf android/
+          flutter create . --platforms=android --project-name sosauto3
+          flutter pub get
+          
+      - name: Build AAB
+        run: flutter build appbundle --release
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
